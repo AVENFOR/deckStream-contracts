@@ -1,0 +1,25 @@
+{
+  "name": "deckstream-contracts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AVENFOR/deckStream-contracts.git"
+  },
+  "author": "Alejandro Soto and Jose Ospina",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AVENFOR/deckStream-contracts/issues"
+  },
+  "homepage": "https://github.com/AVENFOR/deckStream-contracts#readme",
+  "keywords": [],
+  "description": "",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.0",
+    "ethers": "^5.7.1",
+    "hardhat": "^2.12.0"
+  }
+}
