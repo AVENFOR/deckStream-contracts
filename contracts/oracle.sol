@@ -1,52 +1,101 @@
-// SPDX-License-Identifier: MIT
+//SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
 import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
 
-contract OracleStreaming is ChainlinkClient, ConfirmedOwner {
-    using Chainlink for Chainlink.Request;
+/**
+ * Request testnet LINK and ETH here: https://faucets.chain.link/
+ * Find information on LINK Token Contracts and get the latest ETH and LINK faucets here: https://docs.chain.link/docs/link-token-contracts/
+ */
 
-    uint256 public volume;
+/**
+ * THIS IS AN EXAMPLE CONTRACT THAT USES HARDCODED VALUES FOR CLARITY.
+ * THIS IS AN EXAMPLE CONTRACT THAT USES UN-AUDITED CODE.
+ * DO NOT USE THIS CODE IN PRODUCTION.
+ */
+
+contract CreatorInfo is ChainlinkClient, ConfirmedOwner {
+    using Chainlink for Chainlink.Request;
+    struct Creator {
+        uint256  followers; 
+        uint256  suscribers;
+        uint256  hour;
+    }
+    Creator public creator;
     bytes32 private jobId;
     uint256 private fee;
 
-    event RequestVolume(bytes32 indexed requestId, uint256 volume);
+    // multiple params returned in a single oracle response
+    uint256 public followers;
+    uint256 public suscribers;
+    uint256 public hour;
+
+    event RequestMultipleFulfilled(bytes32 indexed requestId, uint256 _followers, uint256 _suscribers, uint256 _hour);
 
     /**
      * @notice Initialize the link token and target oracle
-
+     * @dev The oracle address must be an Operator contract for multiword response
+     *
+     *
+     * Goerli Testnet details:
+     * Link Token: 0x326C977E6efc84E512bB9C30f76E30c160eD06FB
+     * Oracle: 0xCC79157eb46F5624204f47AB42b3906cAA40eaB7 (Chainlink DevRel)
+     * jobId: 53f9755920cd451a8fe46f5087468395
+     *
      */
     constructor() ConfirmedOwner(msg.sender) {
         setChainlinkToken(0x326C977E6efc84E512bB9C30f76E30c160eD06FB);
         setChainlinkOracle(0xCC79157eb46F5624204f47AB42b3906cAA40eaB7);
-        jobId = "ca98366cc7314957b8c012c72f05aeeb";
+        jobId = "53f9755920cd451a8fe46f5087468395";
         fee = (1 * LINK_DIVISIBILITY) / 10; // 0,1 * 10**18 (Varies by network and job)
     }
 
-
-    function requestVolumeData() public returns (bytes32 requestId) {
-        Chainlink.Request memory req = buildChainlinkRequest(jobId, address(this), this.fulfill.selector);
-
-        // Set the URL to perform the GET request on
-        req.add("get", "https://62fd7b30b9e38585cd52637e.mockapi.io/hackathon/arbitrum/infoUsers/1");
-
-        req.add("path", "followers"); // Chainlink nodes 1.0.0 and later support this format
-
-        // Multiply the result by 1000000000000000000 to remove decimals
-        int256 timesAmount = 10**18;
-        req.addInt("times", timesAmount);
-
-        // Sends the request
-        return sendChainlinkRequest(req, fee);
+    /**
+     * @notice Request mutiple parameters from the oracle in a single transaction
+     */
+    function requestMultipleParameters() public {
+        Chainlink.Request memory req = buildChainlinkRequest(
+            jobId,
+            address(this),
+            this.fulfillMultipleParameters.selector
+        );
+        req.add("urlFollowers", "https://62fd7b30b9e38585cd52637e.mockapi.io/hackathon/arbitrum/infoUsers/1");
+        req.add("pathFollowers", "followers");
+        req.add("urlSuscribers", "https://62fd7b30b9e38585cd52637e.mockapi.io/hackathon/arbitrum/infoUsers/1");
+        req.add("pathSuscribers", "suscribers");
+        req.add("urlHour", "https://62fd7b30b9e38585cd52637e.mockapi.io/hackathon/arbitrum/infoUsers/1");
+        req.add("pathHour", "hour");
+        sendChainlinkRequest(req, fee); // MWR API.
     }
 
     /**
-     * Receive the response in the form of uint256
+     * @notice Fulfillment function for multiple parameters in a single request
+     * @dev This is called by the oracle. recordChainlinkFulfillment must be used.
      */
-    function fulfill(bytes32 _requestId, uint256 _volume) public recordChainlinkFulfillment(_requestId) {
-        emit RequestVolume(_requestId, _volume);
-        volume = _volume;
+    function fulfillMultipleParameters(
+        bytes32 requestId,
+        uint256 _followers,
+        uint256 _suscribers,
+        uint256 _hour
+    ) public recordChainlinkFulfillment(requestId) {
+        emit RequestMultipleFulfilled(requestId, _followers, _suscribers, _hour);
+        followers = _followers;
+        suscribers = _suscribers;
+        hour = _hour;
+        creator = Creator(_followers, _suscribers, _hour);
+    }
+
+    function followersShow () public view returns(uint256) {
+        return creator.followers;
+    }
+
+    function suscribersShow () public view returns(uint256) {
+        return creator.suscribers;
+    }
+
+    function hourShow () public view returns(uint256) {
+        return creator.hour;
     }
 
     /**
