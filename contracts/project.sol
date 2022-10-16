@@ -45,7 +45,7 @@ contract CreateProjects {
         function addAmount(address _addressNFT) public payable{
             require(msg.value>0, "money is less than 0");
             require(instanceContract.followersShow() > 90 && instanceContract.suscribersShow() > 90 && instanceContract.hourShow() > 40, "Creator very new");
-            listNFT[address(_addressNFT)].contributionList.push(Contribution(msg.value, block.timestamp + 20, false));
+            listNFT[address(_addressNFT)].contributionList.push(Contribution(msg.value, block.timestamp + 2592000, false));
         }
 
 
